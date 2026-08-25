@@ -8,30 +8,36 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-/**
- * DAO (Data Access Object) concentra os comandos SQL de Cliente.
- * Connection representa a conexao, PreparedStatement envia SQL parametrizado
- * e ResultSet permite percorrer as linhas devolvidas por um SELECT.
- */
+
 public class ClienteDAO {
 
   public void salvar(Cliente cliente) throws SQLException {
     String sql =
       "INSERT INTO cliente (nome, cpf, email, data_nascimento, senha_hash, senha_salt, ativo) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
     Connection conexao = null;
     PreparedStatement stmt = null;
+
     try {
       conexao = Conexao.abrir();
-      stmt = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+      stmt = conexao.prepareStatement(
+        sql,
+        Statement.RETURN_GENERATED_KEYS
+      );
+
       preencher(stmt, cliente, false);
       stmt.executeUpdate();
+
       ResultSet chaves = null;
+
       try {
         chaves = stmt.getGeneratedKeys();
-        if (chaves.next()) cliente.setId(chaves.getInt(1));
+
+        if (chaves.next()) {
+          cliente.setId(chaves.getInt(1));
+        }
       } finally {
         Conexao.fechar(chaves);
       }
@@ -41,23 +47,48 @@ public class ClienteDAO {
   }
 
   public void atualizar(Cliente cliente) throws SQLException {
-    String sql =
+    String sqlComSenha =
       "UPDATE cliente SET nome=?, cpf=?, email=?, data_nascimento=?, senha_hash=?, senha_salt=?, ativo=? WHERE id=?";
+
+    String sqlSemSenha =
+      "UPDATE cliente SET nome=?, cpf=?, email=?, data_nascimento=?, ativo=? WHERE id=?";
+
+    boolean mudarSenha =
+      cliente.getSenhaHash() != null &&
+      cliente.getSenhaHash().length() > 0;
+
     Connection conexao = null;
     PreparedStatement stmt = null;
+
     try {
       conexao = Conexao.abrir();
-      stmt = conexao.prepareStatement(sql);
-      preencher(stmt, cliente, true);
-      if (stmt.executeUpdate() == 0) throw new SQLException(
-        "Cliente nao encontrado."
+      stmt = conexao.prepareStatement(
+        mudarSenha ? sqlComSenha : sqlSemSenha
       );
+
+      if (mudarSenha) {
+        preencher(stmt, cliente, true);
+      } else {
+        stmt.setString(1, cliente.getNome().trim());
+        stmt.setString(2, cliente.getCpf().trim());
+        stmt.setString(3, cliente.getEmail().trim());
+        stmt.setDate(
+          4,
+          new java.sql.Date(cliente.getDataNascimento().getTime())
+        );
+        stmt.setBoolean(5, cliente.isAtivo());
+        stmt.setInt(6, cliente.getId());
+      }
+
+      if (stmt.executeUpdate() == 0) {
+        throw new SQLException("Cliente nao encontrado.");
+      }
     } finally {
       Conexao.fechar(conexao, stmt, null);
     }
   }
 
-  /** Preserva o historico: excluir um cliente significa inativa-lo. */
+  
   public void excluir(int id) throws SQLException {
     alterarAtivo(id, false);
   }
@@ -65,14 +96,19 @@ public class ClienteDAO {
   public void alterarAtivo(int id, boolean ativo) throws SQLException {
     Connection conexao = null;
     PreparedStatement stmt = null;
+
     try {
       conexao = Conexao.abrir();
-      stmt = conexao.prepareStatement("UPDATE cliente SET ativo=? WHERE id=?");
+      stmt = conexao.prepareStatement(
+        "UPDATE cliente SET ativo=? WHERE id=?"
+      );
+
       stmt.setBoolean(1, ativo);
       stmt.setInt(2, id);
-      if (stmt.executeUpdate() == 0) throw new SQLException(
-        "Cliente nao encontrado."
-      );
+
+      if (stmt.executeUpdate() == 0) {
+        throw new SQLException("Cliente nao encontrado.");
+      }
     } finally {
       Conexao.fechar(conexao, stmt, null);
     }
@@ -83,6 +119,7 @@ public class ClienteDAO {
       "SELECT * FROM cliente WHERE id=?",
       Integer.valueOf(id)
     );
+
     return lista.isEmpty() ? null : lista.get(0);
   }
 
@@ -94,29 +131,48 @@ public class ClienteDAO {
   }
 
   public List<Cliente> listarTodos() throws SQLException {
-    return consultar("SELECT * FROM cliente ORDER BY nome", null);
+    return consultar(
+      "SELECT * FROM cliente ORDER BY nome",
+      null
+    );
   }
 
   public List<Cliente> listarAtivos() throws SQLException {
-    return consultar("SELECT * FROM cliente WHERE ativo=1 ORDER BY nome", null);
+    return consultar(
+      "SELECT * FROM cliente WHERE ativo=1 ORDER BY nome",
+      null
+    );
   }
 
   private List<Cliente> consultar(String sql, Object parametro)
     throws SQLException {
+
     List<Cliente> lista = new ArrayList<Cliente>();
     Connection conexao = null;
     PreparedStatement stmt = null;
     ResultSet rs = null;
+
     try {
       conexao = Conexao.abrir();
       stmt = conexao.prepareStatement(sql);
-      if (parametro instanceof Integer) stmt.setInt(
-        1,
-        ((Integer) parametro).intValue()
-      );
-      if (parametro instanceof String) stmt.setString(1, (String) parametro);
+
+      if (parametro instanceof Integer) {
+        stmt.setInt(
+          1,
+          ((Integer) parametro).intValue()
+        );
+      }
+
+      if (parametro instanceof String) {
+        stmt.setString(1, (String) parametro);
+      }
+
       rs = stmt.executeQuery();
-      while (rs.next()) lista.add(mapear(rs));
+
+      while (rs.next()) {
+        lista.add(mapear(rs));
+      }
+
       return lista;
     } finally {
       Conexao.fechar(conexao, stmt, rs);
@@ -124,30 +180,39 @@ public class ClienteDAO {
   }
 
   private Cliente mapear(ResultSet rs) throws SQLException {
-    Cliente c = new Cliente();
-    c.setId(rs.getInt("id"));
-    c.setNome(rs.getString("nome"));
-    c.setCpf(rs.getString("cpf"));
-    c.setEmail(rs.getString("email"));
-    c.setData_nascimento(rs.getDate("data_nascimento"));
-    c.setSenha_hash(rs.getString("senha_hash"));
-    c.setSenha_salt(rs.getString("senha_salt"));
-    c.setAtivo(rs.getBoolean("ativo"));
-    return c;
+    Cliente cliente = new Cliente();
+
+    cliente.setId(rs.getInt("id"));
+    cliente.setNome(rs.getString("nome"));
+    cliente.setCpf(rs.getString("cpf"));
+    cliente.setEmail(rs.getString("email"));
+    cliente.setDataNascimento(rs.getDate("data_nascimento"));
+    cliente.setSenhaHash(rs.getString("senha_hash"));
+    cliente.setSenhaSalt(rs.getString("senha_salt"));
+    cliente.setAtivo(rs.getBoolean("ativo"));
+
+    return cliente;
   }
 
-  private void preencher(PreparedStatement stmt, Cliente c, boolean atualizacao)
-    throws SQLException {
-	  
+  private void preencher(
+    PreparedStatement stmt,
+    Cliente cliente,
+    boolean atualizacao
+  ) throws SQLException {
 
-    stmt.setString(1, c.getNome().trim());
-    stmt.setString(2, c.getCpf().trim());
-    stmt.setString(3, c.getEmail());
-    stmt.setDate(4, (java.sql.Date) c.getData_nascimento());
-    
+    stmt.setString(1, cliente.getNome().trim());
+    stmt.setString(2, cliente.getCpf().trim());
+    stmt.setString(3, cliente.getEmail().trim());
+    stmt.setDate(
+      4,
+      new java.sql.Date(cliente.getDataNascimento().getTime())
+    );
+    stmt.setString(5, cliente.getSenhaHash());
+    stmt.setString(6, cliente.getSenhaSalt());
+    stmt.setBoolean(7, cliente.isAtivo());
+
     if (atualizacao) {
-      stmt.setBoolean(6, c.isAtivo());
-      stmt.setInt(7, c.getId());
-    } 
+      stmt.setInt(8, cliente.getId());
+    }
   }
 }
