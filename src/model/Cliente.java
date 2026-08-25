@@ -2,94 +2,114 @@ package model;
 
 import java.util.Date;
 
-/** Entidade que representa o cliente cadastrado no sistema. */
 public class Cliente {
+	private int id;
+	private String nome;
+	private String cpf;
+	private String email;
+	private Date data_nascimento;
+	private String senha_hash;
+	private String senha_salt;
+	private boolean ativo;
+	
+	
+	public Cliente(boolean ativo) {
+		super();
+		this.setAtivo(true);
+	}
+	
+	
+	
+	public Cliente(int id, String nome, String cpf, String email, Date data_nascimento, String senha_hash,
+			String senha_salt) {
+		super();
+		this.id = id;
+		this.nome = nome;
+		this.cpf = cpf;
+		this.email = email;
+		this.data_nascimento = data_nascimento;
+		this.senha_hash = senha_hash;
+		this.senha_salt = senha_salt;
+	}
 
-  private int id;
-  private String nome;
-  private String cpf;
-  private String email;
-  private Date dataNascimento;
-  private String senhaHash;
-  private String senhaSalt;
-  private boolean ativo;
 
-  public Cliente() {
-    this.ativo = true;
-  }
 
-  public Cliente(String nome, String cpf, String email) {
-    this();
-    this.nome = nome;
-    this.cpf = cpf;
-    this.email = email;
-  }
+	public int getId() {
+		return id;
+	}
 
-  public int getId() {
-    return id;
-  }
 
-  public void setId(int id) {
-    this.id = id;
-  }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-  public String getNome() {
-    return nome;
-  }
 
-  public void setNome(String nome) {
-    this.nome = nome;
-  }
+	public String getNome() {
+		return nome;
+	}
 
-  public String getCpf() {
-    return cpf;
-  }
 
-  public void setCpf(String cpf) {
-    this.cpf = cpf;
-  }
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
 
-  public String getEmail() {
-    return email;
-  }
 
-  public void setEmail(String email) {
-    this.email = email;
-  }
+	public String getCpf() {
+		return cpf;
+	}
 
-  public Date getDataNascimento() {
-    return dataNascimento;
-  }
 
-  public void setDataNascimento(Date dataNascimento) {
-    this.dataNascimento = dataNascimento;
-  }
+	public void setCpf(String cpf) {
+		this.cpf = cpf;
+	}
 
-  public String getSenhaHash() {
-    return senhaHash;
-  }
 
-  public void setSenhaHash(String senhaHash) {
-    this.senhaHash = senhaHash;
-  }
+	public String getEmail() {
+		return email;
+	}
 
-  public String getSenhaSalt() {
-    return senhaSalt;
-  }
 
-  public void setSenhaSalt(String senhaSalt) {
-    this.senhaSalt = senhaSalt;
-  }
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
-  public boolean isAtivo() {
-    return ativo;
-  }
 
-  public void setAtivo(boolean ativo) {
-    this.ativo = ativo;
-  }
+	public Date getData_nascimento() {
+		return data_nascimento;
+	}
 
-  public String toString() {
-    return nome;
-  }
+
+	public void setData_nascimento(Date data_nascimento) {
+		this.data_nascimento = data_nascimento;
+	}
+
+
+	public String getSenha_hash() {
+		return senha_hash;
+	}
+
+
+	public void setSenha_hash(String senha_hash) {
+		this.senha_hash = senha_hash;
+	}
+
+
+	public String getSenha_salt() {
+		return senha_salt;
+	}
+
+
+	public void setSenha_salt(String senha_salt) {
+		this.senha_salt = senha_salt;
+	}
+
+
+	public boolean isAtivo() {
+		return ativo;
+	}
+
+
+	public void setAtivo(boolean ativo) {
+		this.ativo = ativo;
+	}
 }
