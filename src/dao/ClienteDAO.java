@@ -2,6 +2,7 @@ package dao;
 
 import model.Cliente;
 import util.Conexao;
+import util.SenhaUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +13,43 @@ import java.util.List;
 
 
 public class ClienteDAO {
+	
+	public Cliente autenticar(String email, String senha) throws SQLException {
+
+			  Connection conexao = null;
+			  PreparedStatement stmt = null;
+			  ResultSet rs = null;
+
+			  try {
+			    conexao = Conexao.abrir();
+
+			    stmt = conexao.prepareStatement(
+			      "SELECT * FROM cliente " +
+			      "WHERE email=? AND ativo=1"
+			    );
+
+			    stmt.setString(1, email.trim());
+			    rs = stmt.executeQuery();
+
+			    if (rs.next()) {
+			      Cliente cliente = mapear(rs);
+
+			      if (
+			        SenhaUtil.conferir(
+			          senha,
+			          cliente.getSenhaSalt(),
+			          cliente.getSenhaHash()
+			        )
+			      ) {
+			        return cliente;
+			      }
+			    }
+
+			    return null;
+			  } finally {
+			    Conexao.fechar(conexao, stmt, rs);
+			  }
+			}
 
   public void salvar(Cliente cliente) throws SQLException {
     String sql =
