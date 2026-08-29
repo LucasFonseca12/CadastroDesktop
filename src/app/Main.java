@@ -1,6 +1,6 @@
 package app;
 
-import view.TelaPrincipal;
+import view.TelaLogin;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -20,7 +20,7 @@ public class Main {
             e.printStackTrace();
           }
 
-          new TelaPrincipal().setVisible(true);
+          new TelaLogin().setVisible(true);
         }
       }
     );
