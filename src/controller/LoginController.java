@@ -18,7 +18,7 @@ public class LoginController {
   }
 
   public void entrar() {
-    String email = tela.getTxtEmail().getText().trim();
+	String email = tela.getTxtLogin().getText().trim();
     String senha = new String(tela.getTxtSenha().getPassword());
     if (Validador.vazio(email) || Validador.vazio(senha)) {
       JOptionPane.showMessageDialog(
